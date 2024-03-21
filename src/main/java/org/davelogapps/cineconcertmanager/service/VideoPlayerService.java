@@ -9,12 +9,18 @@ import java.io.File;
 import java.util.List;
 
 public class VideoPlayerService {
-    public MediaPlayer loadAndPlayFirstVideo(String directoryPath) {
-        VideoLoader videoLoader = new VideoLoader();
-        List<VideoFile> videoFiles = videoLoader.loadVideosFromDirectory(directoryPath);
+    private final VideoLoader videoLoader;
 
-        VideoFile firstVideo = videoFiles.getFirst();
-        Media media = new Media(new File(firstVideo.getFilePath()).toURI().toString());
+    public VideoPlayerService() {
+        this.videoLoader = new VideoLoader();
+    }
+
+    public List<VideoFile> loadVideos(String directoryPath) {
+        return videoLoader.loadVideosFromDirectory(directoryPath);
+    }
+
+    public MediaPlayer loadAndPlayVideo(VideoFile videoFile) {
+        Media media = new Media(new File(videoFile.getFilePath()).toURI().toString());
         return new MediaPlayer(media);
     }
 }
