@@ -24,7 +24,7 @@ public class VideoLoader {
                         String filename = file.getName();
                         String filePath = file.getAbsolutePath();
                         String alias = filename.substring(0, filename.lastIndexOf("."));
-                        videoFiles.add(new VideoFile(filename, filePath, alias));
+                        videoFiles.add(new VideoFile(filename, filePath, alias, false));
                     }
                 }
             }

@@ -12,4 +12,5 @@ public class VideoFile {
     private String filename;
     private String filePath;
     private String alias;
+    private boolean mute;
 }

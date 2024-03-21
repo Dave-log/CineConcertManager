@@ -3,6 +3,9 @@ module org.davelogapps.cineconcertmanager {
     requires javafx.fxml;
     requires javafx.media;
     requires lombok;
+    requires com.fasterxml.jackson.core;
+    requires com.fasterxml.jackson.annotation;
+    requires com.fasterxml.jackson.databind;
 
     requires org.controlsfx.controls;
 

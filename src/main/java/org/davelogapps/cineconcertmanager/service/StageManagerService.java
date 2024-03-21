@@ -1,5 +1,6 @@
 package org.davelogapps.cineconcertmanager.service;
 
+import javafx.animation.FadeTransition;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
@@ -7,6 +8,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.davelogapps.cineconcertmanager.model.VideoFile;
 
 import java.util.ArrayList;
@@ -29,6 +31,8 @@ public class StageManagerService {
         videoFiles = videoPlayerService.loadVideos(directoryPath);
         final MediaPlayer[] mediaPlayerContainer = {null};
 
+        currentIndex = 0;
+
         mediaPlayerContainer[0] = videoPlayerService.loadAndPlayVideo(videoFiles.get(currentIndex));
 
         if (mediaPlayerContainer[0] != null) {
@@ -44,7 +48,6 @@ public class StageManagerService {
             mediaView.setPreserveRatio(true);
             mediaView.fitWidthProperty().bind(scene.widthProperty());
             mediaView.fitHeightProperty().bind(scene.heightProperty());
-            //mediaPlayerContainer[0].play();
 
             stage.show();
         }
@@ -55,7 +58,26 @@ public class StageManagerService {
 
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.SPACE) {
-                currentIndex = (currentIndex + 1) % videoFiles.size();
+                currentIndex = (currentIndex) % videoFiles.size();
+                mediaPlayerContainer[0].stop();
+                mediaPlayerContainer[0].dispose();
+                mediaPlayerContainer[0] = videoPlayerService.loadAndPlayVideo(videoFiles.get(currentIndex));
+                currentIndex += 1;
+                mediaView.setMediaPlayer(mediaPlayerContainer[0]);
+                mediaPlayerContainer[0].play();
+
+            } else if (event.getCode() == KeyCode.P) {
+                if (mediaPlayerContainer[0].getStatus() == MediaPlayer.Status.PAUSED) {
+                    mediaPlayerContainer[0].play();
+                } else {
+                    mediaPlayerContainer[0].pause();
+                }
+
+            } else if (event.getCode() == KeyCode.R) {
+                mediaPlayerContainer[0].seek(Duration.ZERO);
+
+            } else if (event.getCode() == KeyCode.BACK_SPACE) {
+                currentIndex = 0;
                 mediaPlayerContainer[0].stop();
                 mediaPlayerContainer[0].dispose();
                 mediaPlayerContainer[0] = videoPlayerService.loadAndPlayVideo(videoFiles.get(currentIndex));
