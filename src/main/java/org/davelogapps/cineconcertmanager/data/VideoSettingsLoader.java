@@ -38,13 +38,4 @@ public class VideoSettingsLoader {
             e.printStackTrace();
         }
     }
-
-    private VideoFile findVideoFile(List<VideoFile> videoFiles, String filename) {
-        for (VideoFile videoFile : videoFiles) {
-            if (videoFile.getFilename().equals(filename)) {
-                return videoFile;
-            }
-        }
-        return null;
-    }
 }
