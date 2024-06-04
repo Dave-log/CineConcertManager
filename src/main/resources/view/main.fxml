@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.text.Text?>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.davelogapps.cineconcertmanager.controller.MainController"
+      spacing="10" alignment="CENTER" padding="20">
+
+    <Text text="CineConcertManager" style="-fx-font-size: 24px;"/>
+
+    <Button text="Créer une nouvelle séquence" onAction="#createNewSequence"/>
+    <Button text="Éditer une séquence" onAction="#editSequence"/>
+    <Button text="Lancer une séquence" onAction="#launchSequence"/>
+</VBox>

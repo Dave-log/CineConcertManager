@@ -1,8 +1,20 @@
 package org.davelogapps.cineconcertmanager.controller;
 
-/*
-    Cette classe servira de contrôleur principal de votre application. Elle sera responsable de la coordination entre
-    la vue et le modèle, et de la gestion des évènements utilisateur.
- */
+import javafx.fxml.FXML;
+
 public class MainController {
+    @FXML
+    private void createNewSequence() {
+
+    }
+
+    @FXML
+    private void editSequence() {
+
+    }
+
+    @FXML
+    private void launchSequence() {
+
+    }
 }

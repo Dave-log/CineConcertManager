@@ -1,8 +1,14 @@
 package org.davelogapps.cineconcertmanager.controller;
 
-/*
-    Ce contrôleur gérera les interactions liées à la lecture vidéo, telles que le démarrage, la pause, le passage à la
-    vidéo suivante, etc.
- */
+import javafx.fxml.FXML;
+
 public class VideoPlayerController {
+    @FXML
+    private void playPause() {}
+
+    @FXML
+    private void restart() {}
+
+    @FXML
+    private void end() {}
 }
