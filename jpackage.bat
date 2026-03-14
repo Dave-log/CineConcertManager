@@ -3,50 +3,55 @@ setlocal
 
 :: === Configuration ===
 set "APP_NAME=CineConcertCreator"
-set "APP_VERSION=1.1.0"
-set "MAIN_JAR=target\CineConcertManager-1.1.0.jar"
+set "APP_VERSION=1.0.0"
+set "MAIN_JAR=target\CineConcertManager-1.0.0.jar"
 set "MAIN_CLASS=org.davelogapps.cineconcertmanager.App"
 set "ICON_PATH=src\main\resources\iconeMjc.ico"
 
 :: === Paths ===
-set "JAVA_HOME=C:\Program Files\Java\jdk-21"
-set "JAVAFX_SDK=E:\Documents\Programmation\Java\JavaFX21\javafx-sdk-21.0.6"
+set "JAVA_HOME=C:\Users\Merendir\.jdks\ms-21.0.10"
+set "JAVAFX_JMODS=E:\Documents\Programmation\Java\JavaFX21\javafx-jmods-21.0.10"
+
 set "OUTPUT_DIR=out"
 set "APP_DIR=target\app"
-set "RESOURCE_DIR=build\resources"
+
+if not exist "%JAVA_HOME%\bin\jpackage.exe" (
+  echo ERROR : jpackage.exe not found in "%JAVA_HOME%\bin"
+  pause
+  exit /b 1
+)
+
+if not exist "%JAVAFX_JMODS%" (
+  echo ERROR : JAVAFX_JMODS directory not found in "%JAVAFX_JMODS%"
+  pause
+  exit /b 1
+)
 
 :: === Cleaning ===
-echo 🧹 Nettoyage...
+echo Cleaning...
 if exist "%OUTPUT_DIR%\%APP_NAME%" rd /s /q "%OUTPUT_DIR%\%APP_NAME%"
 if exist "%APP_DIR%" rd /s /q "%APP_DIR%"
-if exist "%RESOURCE_DIR%" rd /s /q "%RESOURCE_DIR%"
 mkdir "%APP_DIR%"
-mkdir "%RESOURCE_DIR%"
 
 :: === Copying JAR ===
-echo 📦 Copie du .jar dans %APP_DIR%
+echo Copying JAR into %APP_DIR%
 copy "%MAIN_JAR%" "%APP_DIR%" > nul
 
-:: === Copying JavaFX natives ===
-echo 🧩 Copie des DLL natives JavaFX...
-copy "%JAVAFX_SDK%\bin\*.dll" "%RESOURCE_DIR%" > nul
-
 :: === Packaging ===
-echo 🚀 Création de l'exécutable avec jpackage...
+echo Executable generation with JPackage...
 "%JAVA_HOME%\bin\jpackage.exe" ^
   --type app-image ^
   --name "%APP_NAME%" ^
-  --app-version "%APP_VERSION" ^
+  --app-version "%APP_VERSION%" ^
   --input "%APP_DIR%" ^
-  --main-jar "CineConcertManager-1.1.0.jar" ^
+  --main-jar "CineConcertManager-1.0.0.jar" ^
   --main-class "%MAIN_CLASS%" ^
-  --module-path "%JAVAFX_SDK%\lib" ^
+  --module-path "%JAVAFX_JMODS%;%JAVA_HOME%\jmods" ^
   --add-modules javafx.controls,javafx.media,javafx.graphics ^
   --icon "%ICON_PATH%" ^
   --dest "%OUTPUT_DIR%" ^
-  --resource-dir "%RESOURCE_DIR%" ^
   --win-console ^
   --verbose
 
-echo ✅ Terminé ! Lance le .exe depuis %OUTPUT_DIR%\%APP_NAME%\bin
+echo Finished! Launch .exe from %OUTPUT_DIR%\%APP_NAME%\bin
 pause
