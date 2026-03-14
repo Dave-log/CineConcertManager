@@ -6,25 +6,52 @@ import javafx.scene.layout.Pane;
 import lombok.Data;
 import org.davelogapps.cineconcertmanager.util.Constants;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 @Data
 public class PromoImageManager {
-    private final ImageView promoImageView;
+    private final List<ImageView> promoImages = new ArrayList<>();
+    private int currentIndex = 0;
 
-    public PromoImageManager(String imagePath) {
-        promoImageView = new ImageView(new Image(imagePath));
-        promoImageView.setFitWidth(Constants.SCREEN_WIDTH);
-        promoImageView.setFitHeight(Constants.SCREEN_HEIGHT);
+    public PromoImageManager(String directoryPath) {
+        File directory = new File(directoryPath);
+        File[] files = directory.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
+
+        if (files != null) {
+            Arrays.sort(files);
+            for (File file : files) {
+                Image image = new Image(file.toURI().toString());
+                ImageView imageView = new ImageView(image);
+
+                imageView.setPreserveRatio(true);
+                imageView.setSmooth(true);
+                imageView.setCache(true);
+
+                imageView.setFitWidth(Constants.SCREEN_WIDTH);
+                imageView.setFitHeight(Constants.SCREEN_HEIGHT);
+
+                promoImages.add(imageView);
+            }
+        }
+
+        if (promoImages.isEmpty()) {
+            System.err.println("Aucun habillage trouvé dans : " + directoryPath);
+        }
     }
 
-    public Pane getImagePane() {
-        return new Pane(promoImageView);
-    }
+    public Pane getNextPromoPane() {
+        if (promoImages.isEmpty()) return new Pane();
 
-    public void showImage() {
-        promoImageView.setVisible(true);
-    }
+        ImageView currentImage = promoImages.get(currentIndex);
+        currentIndex = (currentIndex + 1) % promoImages.size();
 
-    public void hideImage() {
-        promoImageView.setVisible(false);
+        Pane pane = new Pane(currentImage);
+        currentImage.fitWidthProperty().bind(pane.widthProperty());
+        currentImage.fitHeightProperty().bind(pane.heightProperty());
+
+        return pane;
     }
 }
