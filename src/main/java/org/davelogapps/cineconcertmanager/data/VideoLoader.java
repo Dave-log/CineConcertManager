@@ -24,11 +24,13 @@ public class VideoLoader {
                         String filename = file.getName();
                         String filePath = file.getAbsolutePath();
                         String alias = filename.substring(0, filename.lastIndexOf("."));
-                        videoFiles.add(new VideoFile(filename, filePath, alias, false));
+                        boolean isMuted = filename.toLowerCase().contains("[mute]");
+                        videoFiles.add(new VideoFile(filename, filePath, alias, isMuted));
                     }
                 }
             }
         }
+        System.out.println(videoFiles.size());
         return videoFiles;
     }
 
