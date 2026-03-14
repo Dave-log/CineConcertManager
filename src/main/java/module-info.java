@@ -1,14 +1,17 @@
 module org.davelogapps.cineconcertmanager {
     requires javafx.controls;
-    requires javafx.fxml;
     requires javafx.media;
-    requires lombok;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.annotation;
     requires com.fasterxml.jackson.databind;
 
     requires org.controlsfx.controls;
+    requires java.prefs;
+    requires static lombok;
 
-    opens org.davelogapps.cineconcertmanager to javafx.fxml;
     exports org.davelogapps.cineconcertmanager;
+    exports org.davelogapps.cineconcertmanager.data;
+    exports org.davelogapps.cineconcertmanager.model;
+    exports org.davelogapps.cineconcertmanager.service;
+    exports org.davelogapps.cineconcertmanager.util;
 }
