@@ -13,16 +13,23 @@ set "JAVA_HOME=C:\Program Files\Java\jdk-21"
 set "JAVAFX_SDK=E:\Documents\Programmation\Java\JavaFX21\javafx-sdk-21.0.6"
 set "OUTPUT_DIR=out"
 set "APP_DIR=target\app"
+set "RESOURCE_DIR=build\resources"
 
 :: === Cleaning ===
 echo 🧹 Nettoyage...
 if exist "%OUTPUT_DIR%\%APP_NAME%" rd /s /q "%OUTPUT_DIR%\%APP_NAME%"
 if exist "%APP_DIR%" rd /s /q "%APP_DIR%"
+if exist "%RESOURCE_DIR%" rd /s /q "%RESOURCE_DIR%"
 mkdir "%APP_DIR%"
+mkdir "%RESOURCE_DIR%"
 
 :: === Copying JAR ===
 echo 📦 Copie du .jar dans %APP_DIR%
 copy "%MAIN_JAR%" "%APP_DIR%" > nul
+
+:: === Copying JavaFX natives ===
+echo 🧩 Copie des DLL natives JavaFX...
+copy "%JAVAFX_SDK%\bin\*.dll" "%RESOURCE_DIR%" > nul
 
 :: === Packaging ===
 echo 🚀 Création de l'exécutable avec jpackage...
@@ -37,6 +44,7 @@ echo 🚀 Création de l'exécutable avec jpackage...
   --add-modules javafx.controls,javafx.media,javafx.graphics ^
   --icon "%ICON_PATH%" ^
   --dest "%OUTPUT_DIR%" ^
+  --resource-dir "%RESOURCE_DIR%" ^
   --win-console ^
   --verbose
 
