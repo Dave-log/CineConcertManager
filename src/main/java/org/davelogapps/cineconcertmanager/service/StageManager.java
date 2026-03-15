@@ -2,14 +2,17 @@ package org.davelogapps.cineconcertmanager.service;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
+import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
@@ -19,6 +22,7 @@ import javafx.util.Duration;
 import org.davelogapps.cineconcertmanager.model.VideoFile;
 import org.davelogapps.cineconcertmanager.util.Constants;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +55,9 @@ public class StageManager {
 
     public void setupAndShowVideoScene() {
         videoFiles = videoPlayerService.loadVideos(directoryPath);
+
+        showLoadingWindow();
+        preloadVideoMetadata(videoFiles);
 
         if (videoFiles == null || videoFiles.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -399,7 +406,6 @@ public class StageManager {
 
     private void disposePreloadedPlayer() {
         if (preloadedMediaPlayer != null) {
-
             try {
                 preloadedMediaPlayer.stop();
             } catch (Exception ignored) {}
@@ -411,5 +417,53 @@ public class StageManager {
             preloadedMediaPlayer = null;
             preloadedIndex = -1;
         }
+    }
+
+    private void preloadVideoMetadata(List<VideoFile> videos) {
+        for (VideoFile video : videos) {
+            try {
+                Media media = new Media(new File(video.getFilePath()).toURI().toString());
+                MediaPlayer player = new MediaPlayer(media);
+                player.setOnReady(() -> {
+                    System.out.println("Préchargée : " + video.getFilename() + " durée=" + player.getTotalDuration());
+                    player.dispose();
+                });
+                player.setOnError(() -> {
+                    System.err.println("Erreur vidéo : " + video.getFilename());
+                    player.dispose();
+                });
+            } catch (Exception e) {
+                System.err.println("Impossible de charger : " + video.getFilename());
+            }
+        }
+    }
+
+    private void showLoadingWindow() {
+        Stage loadingStage = new Stage();
+
+        Label label = new Label("Chargement des vidéos...");
+        ProgressIndicator indicator = new ProgressIndicator();
+
+        VBox box = new VBox(20, indicator, label);
+        box.setAlignment(Pos.CENTER);
+        box.setStyle("-fx-background-color:black;-fx-padding:40;");
+
+        Scene scene = new Scene(box, 300, 200);
+
+        loadingStage.setScene(scene);
+        loadingStage.setTitle("Chargement");
+        loadingStage.show();
+
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() {
+                preloadVideoMetadata(videoFiles);
+                return null;
+            }
+        };
+
+        task.setOnSucceeded(e -> loadingStage.close());
+
+        new Thread(task).start();
     }
 }
