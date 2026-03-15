@@ -2,10 +2,10 @@
 setlocal
 
 :: === Configuration ===
-set "APP_NAME=CineConcertCreator"
-set "APP_VERSION=1.0.0"
-set "MAIN_JAR=target\CineConcertManager-1.0.0.jar"
-set "MAIN_CLASS=org.davelogapps.cineconcertmanager.App"
+set "APP_NAME=CineConcertManager"
+set "APP_VERSION=1.1.0"
+set "MAIN_JAR=target\CineConcertManager-1.1.0.jar"
+set "MAIN_CLASS=org.davelogapps.cineconcertmanager.Launcher"
 set "ICON_PATH=src\main\resources\iconeMjc.ico"
 
 :: === Paths ===
@@ -44,10 +44,10 @@ echo Executable generation with JPackage...
   --name "%APP_NAME%" ^
   --app-version "%APP_VERSION%" ^
   --input "%APP_DIR%" ^
-  --main-jar "CineConcertManager-1.0.0.jar" ^
+  --main-jar "CineConcertManager-1.1.0.jar" ^
   --main-class "%MAIN_CLASS%" ^
   --module-path "%JAVAFX_JMODS%;%JAVA_HOME%\jmods" ^
-  --add-modules javafx.controls,javafx.media,javafx.graphics ^
+  --add-modules javafx.controls,javafx.fxml,javafx.media,javafx.graphics,java.logging ^
   --icon "%ICON_PATH%" ^
   --dest "%OUTPUT_DIR%" ^
   --win-console ^

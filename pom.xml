@@ -6,7 +6,7 @@
 
   <groupId>org.davelogapps</groupId>
   <artifactId>CineConcertManager</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <name>CineConcertManager</name>
 
   <properties>
@@ -34,6 +34,18 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-media</artifactId>
       <version>21</version>
+    </dependency>
+
+    <dependency>
+      <groupId>uk.co.caprica</groupId>
+      <artifactId>vlcj</artifactId>
+      <version>4.12.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>uk.co.caprica</groupId>
+      <artifactId>vlcj-javafx</artifactId>
+      <version>1.2.1</version>
     </dependency>
 
     <dependency>
@@ -88,6 +100,27 @@
             </path>
           </annotationProcessorPaths>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.davelogapps.cineconcertmanager.Launcher</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

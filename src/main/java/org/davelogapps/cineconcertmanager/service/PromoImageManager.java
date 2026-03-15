@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 public class PromoImageManager {
-    private final List<ImageView> promoImages = new ArrayList<>();
+    private final List<Image> promoImages = new ArrayList<>();
     private int currentIndex = 0;
 
     public PromoImageManager(String directoryPath) {
@@ -23,17 +23,7 @@ public class PromoImageManager {
         if (files != null) {
             Arrays.sort(files);
             for (File file : files) {
-                Image image = new Image(file.toURI().toString());
-                ImageView imageView = new ImageView(image);
-
-                imageView.setPreserveRatio(true);
-                imageView.setSmooth(true);
-                imageView.setCache(true);
-
-                imageView.setFitWidth(Constants.SCREEN_WIDTH);
-                imageView.setFitHeight(Constants.SCREEN_HEIGHT);
-
-                promoImages.add(imageView);
+                promoImages.add(new Image(file.toURI().toString()));
             }
         }
 
@@ -45,12 +35,19 @@ public class PromoImageManager {
     public Pane getNextPromoPane() {
         if (promoImages.isEmpty()) return new Pane();
 
-        ImageView currentImage = promoImages.get(currentIndex);
+        Image image = promoImages.get(currentIndex);
         currentIndex = (currentIndex + 1) % promoImages.size();
 
-        Pane pane = new Pane(currentImage);
-        currentImage.fitWidthProperty().bind(pane.widthProperty());
-        currentImage.fitHeightProperty().bind(pane.heightProperty());
+        ImageView imageView = new ImageView(image);
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+        imageView.setCache(true);
+        imageView.setFitWidth(Constants.SCREEN_WIDTH);
+        imageView.setFitHeight(Constants.SCREEN_HEIGHT);
+
+        Pane pane = new Pane(imageView);
+        imageView.fitWidthProperty().bind(pane.widthProperty());
+        imageView.fitHeightProperty().bind(pane.heightProperty());
 
         return pane;
     }
