@@ -3,8 +3,10 @@ package org.davelogapps.cineconcertmanager;
 import javafx.application.Application;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.davelogapps.cineconcertmanager.engine.impl.javafx.JavaFxVideoEngineFactory;
+import org.davelogapps.cineconcertmanager.engine.impl.vlcj.VlcjVideoEngineFactory;
 import org.davelogapps.cineconcertmanager.service.StageManager;
-import org.davelogapps.cineconcertmanager.service.VideoPlayerService;
+import org.davelogapps.cineconcertmanager.service.VideoPlaybackService;
 
 import java.io.File;
 import java.util.prefs.Preferences;
@@ -27,8 +29,8 @@ public class App extends Application {
             prefs.put("lastDirectory", selectedDirectory.getAbsolutePath());
             String directoryPath = selectedDirectory.getAbsolutePath();
 
-            VideoPlayerService videoPlayerService = new VideoPlayerService();
-            StageManager stageManager = new StageManager(primaryStage, videoPlayerService, directoryPath);
+            VideoPlaybackService videoPlaybackService = new VideoPlaybackService(new VlcjVideoEngineFactory());
+            StageManager stageManager = new StageManager(primaryStage, videoPlaybackService, directoryPath);
             stageManager.setupAndShowVideoScene();
         } else {
             System.out.println("Aucun dossier sélectionné.");

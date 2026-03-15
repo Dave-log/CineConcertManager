@@ -2,62 +2,55 @@ package org.davelogapps.cineconcertmanager.service;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
-import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Slider;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.davelogapps.cineconcertmanager.engine.VideoEngine;
 import org.davelogapps.cineconcertmanager.model.VideoFile;
 import org.davelogapps.cineconcertmanager.util.Constants;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StageManager {
 
     private final Stage stage;
-    private final VideoPlayerService videoPlayerService;
+    private final VideoPlaybackService videoPlaybackService;
     private final PromoImageManager promoImageManager;
     private final String directoryPath;
 
     private List<VideoFile> videoFiles = new ArrayList<>();
     private int currentIndex = -1;
-    private int preloadedIndex = -1;
     private boolean promoVisible = true;
 
-    private MediaPlayer currentMediaPlayer;
-    private MediaPlayer preloadedMediaPlayer;
-    private MediaView mediaView;
+    private VideoEngine currentVideoEngine;
+
     private BorderPane root;
     private Slider timeSlider;
     private Label fileNameLabel;
     private Rectangle blackOverlay;
 
-    public StageManager(Stage stage, VideoPlayerService videoPlayerService, String directoryPath) {
+    public StageManager(Stage stage, VideoPlaybackService videoPlaybackService, String directoryPath) {
         this.stage = stage;
-        this.videoPlayerService = videoPlayerService;
+        this.videoPlaybackService = videoPlaybackService;
         this.directoryPath = directoryPath;
         this.promoImageManager = new PromoImageManager(directoryPath);
     }
 
     public void setupAndShowVideoScene() {
-        videoFiles = videoPlayerService.loadVideos(directoryPath);
-
-        showLoadingWindow();
-        preloadVideoMetadata(videoFiles);
+        videoFiles = videoPlaybackService.loadVideos(directoryPath);
 
         if (videoFiles == null || videoFiles.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -73,13 +66,7 @@ public class StageManager {
         root.setStyle("-fx-background-color: black;");
         root.setCenter(promoImageManager.getNextPromoPane());
 
-        mediaView = new MediaView();
-        mediaView.setPreserveRatio(true);
-
         Scene scene = buildScene();
-
-        mediaView.fitWidthProperty().bind(scene.widthProperty());
-        mediaView.fitHeightProperty().bind(scene.heightProperty());
 
         stage.setScene(scene);
         stage.setTitle("Ciné Concert Manager");
@@ -151,12 +138,9 @@ public class StageManager {
 
     private void setupSliderBehavior() {
         timeSlider.valueChangingProperty().addListener((obs, wasChanging, isChanging) -> {
-            if (!isChanging && currentMediaPlayer != null) {
-                Duration total = currentMediaPlayer.getTotalDuration();
-                if (total != null && !total.isUnknown()) {
-                    double percent = timeSlider.getValue() / 100.0;
-                    currentMediaPlayer.seek(total.multiply(percent));
-                }
+            if (!isChanging && currentVideoEngine != null) {
+                double percent = timeSlider.getValue() / 100.0;
+                currentVideoEngine.setProgress(percent);
             }
         });
     }
@@ -170,7 +154,6 @@ public class StageManager {
                 case E -> endCurrentVideo();
                 case R -> rewindCurrentVideo();
                 case BACK_SPACE -> restartSequence();
-                case N -> skipForward10Seconds();
                 case ESCAPE -> stage.setFullScreen(!stage.isFullScreen());
             }
         });
@@ -190,15 +173,14 @@ public class StageManager {
     }
 
     private void togglePause() {
-        if (currentMediaPlayer == null || promoVisible) {
+        if (currentVideoEngine == null || promoVisible) {
             return;
         }
 
-        MediaPlayer.Status status = currentMediaPlayer.getStatus();
-        if (status == MediaPlayer.Status.PLAYING) {
-            currentMediaPlayer.pause();
-        } else if (status == MediaPlayer.Status.PAUSED || status == MediaPlayer.Status.READY || status == MediaPlayer.Status.STOPPED) {
-            currentMediaPlayer.play();
+        if (currentVideoEngine.isPlaying()) {
+            currentVideoEngine.pause();
+        } else {
+            currentVideoEngine.play();
         }
     }
 
@@ -218,7 +200,7 @@ public class StageManager {
     }
 
     private void endCurrentVideo() {
-        if (currentMediaPlayer == null || promoVisible) {
+        if (currentVideoEngine == null || promoVisible) {
             return;
         }
 
@@ -226,7 +208,7 @@ public class StageManager {
     }
 
     private void rewindCurrentVideo() {
-        if (currentMediaPlayer == null || promoVisible || currentIndex < 0) {
+        if (currentVideoEngine == null || promoVisible || currentIndex < 0) {
             return;
         }
 
@@ -234,29 +216,12 @@ public class StageManager {
     }
 
     private void restartSequence() {
-        stopAndDisposeCurrentPlayer();
-        disposePreloadedPlayer();
+        disposeCurrentVideoEngine();
         currentIndex = -1;
         promoVisible = true;
         fileNameLabel.setText("En attente...");
         timeSlider.setValue(0);
         root.setCenter(promoImageManager.getNextPromoPane());
-    }
-
-    private void skipForward10Seconds() {
-        if (currentMediaPlayer == null || promoVisible) {
-            return;
-        }
-
-        Duration current = currentMediaPlayer.getCurrentTime();
-        Duration total = currentMediaPlayer.getTotalDuration();
-        Duration target = current.add(Duration.seconds(10));
-
-        if (total != null && !total.isUnknown() && target.greaterThan(total)) {
-            target = total;
-        }
-
-        currentMediaPlayer.seek(target);
     }
 
     private void playVideoWithFade(int index) {
@@ -265,35 +230,55 @@ public class StageManager {
         fadeToBlack.setToValue(1.0);
 
         fadeToBlack.setOnFinished(e -> {
-            stopAndDisposeCurrentPlayer();
+            disposeCurrentVideoEngine();
 
             currentIndex = index;
             promoVisible = false;
 
-            if (preloadedMediaPlayer != null && preloadedIndex == index) {
-                currentMediaPlayer = preloadedMediaPlayer;
-                preloadedMediaPlayer = null;
-                preloadedIndex = -1;
-                System.out.println("Reading from preloading");
-            } else {
-                currentMediaPlayer = videoPlayerService.loadAndPlayVideo(videoFiles.get(index));
-                System.out.println("Normal reading");
+            VideoFile videoFile = videoFiles.get(index);
+            currentVideoEngine = videoPlaybackService.createVideoEngine();
+
+            fileNameLabel.setText(videoFile.getFilename().replace("[mute]", "").trim());
+
+            currentVideoEngine.setMute(videoFile.isMute());
+
+            currentVideoEngine.setOnReady(() -> {
+                FadeTransition fadeFromBlack = new FadeTransition(Duration.millis(800), blackOverlay);
+                fadeFromBlack.setFromValue(1.0);
+                fadeFromBlack.setToValue(0.0);
+                fadeFromBlack.play();
+            });
+
+            currentVideoEngine.setOnEnd(this::showPromoWithFade);
+
+            currentVideoEngine.setOnError((message, throwable) -> {
+                System.err.println("Video error: " + message);
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                }
+                showPromoWithFade();
+            });
+
+            currentVideoEngine.setOnProgress(progress -> {
+                if (!timeSlider.isValueChanging()) {
+                    timeSlider.setValue(progress * 100.0);
+                }
+            });
+
+            Node visualNode = currentVideoEngine.getVisualNode();
+            root.setCenter(visualNode);
+
+            if (visualNode instanceof ImageView imageView) {
+                imageView.fitWidthProperty().bind(stage.getScene().widthProperty());
+                imageView.fitHeightProperty().bind(stage.getScene().heightProperty());
             }
 
-            mediaView.setMediaPlayer(currentMediaPlayer);
-            mediaView.setVisible(true);
-            mediaView.setOpacity(1.0);
-            root.setCenter(mediaView);
+            if (currentVideoEngine.getVisualNode() instanceof MediaView mediaView) {
+                mediaView.fitWidthProperty().bind(stage.getScene().widthProperty());
+                mediaView.fitHeightProperty().bind(stage.getScene().heightProperty());
+            }
 
-            setupMediaPlayerListeners(currentMediaPlayer);
-
-            currentMediaPlayer.play();
-            preloadNextVideo();
-
-            FadeTransition fadeFromBlack = new FadeTransition(Duration.millis(800), blackOverlay);
-            fadeFromBlack.setFromValue(1.0);
-            fadeFromBlack.setToValue(0.0);
-            fadeFromBlack.play();
+            currentVideoEngine.load(videoFile);
         });
 
         fadeToBlack.play();
@@ -305,14 +290,12 @@ public class StageManager {
         fadeToBlack.setToValue(1.0);
 
         fadeToBlack.setOnFinished(e -> {
-            if (currentMediaPlayer != null) {
-                currentMediaPlayer.stop();
-            }
+            disposeCurrentVideoEngine();
 
             promoVisible = true;
-            mediaView.setVisible(false);
             root.setCenter(promoImageManager.getNextPromoPane());
             timeSlider.setValue(0);
+            fileNameLabel.setText("En attente...");
 
             FadeTransition fadeFromBlack = new FadeTransition(Duration.millis(800), blackOverlay);
             fadeFromBlack.setFromValue(1.0);
@@ -323,147 +306,20 @@ public class StageManager {
         fadeToBlack.play();
     }
 
-    private void setupMediaPlayerListeners(MediaPlayer mediaPlayer) {
-        String alias = videoFiles.get(currentIndex).getFilename().replace("[mute]", "").trim();
-        fileNameLabel.setText(alias);
-
-        mediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
-            Duration total = mediaPlayer.getTotalDuration();
-            if (total != null && !total.isUnknown() && !timeSlider.isValueChanging()) {
-                double progress = newTime.toMillis() / total.toMillis();
-                timeSlider.setValue(progress * 100);
-            }
-        });
-
-        mediaPlayer.setOnEndOfMedia(this::showPromoWithFade);
-
-        mediaPlayer.setOnError(() -> {
-            System.err.println("MediaPlayer error: " + mediaPlayer.getError());
-            showPromoWithFade();
-        });
-
-        if (mediaPlayer.getMedia() != null) {
-            mediaPlayer.getMedia().setOnError(() -> {
-                System.err.println("Media error: " + mediaPlayer.getMedia().getError());
-                showPromoWithFade();
-            });
-        }
-    }
-
-    private void stopAndDisposeCurrentPlayer() {
-        if (currentMediaPlayer != null) {
+    private void disposeCurrentVideoEngine() {
+        if (currentVideoEngine != null) {
             try {
-                currentMediaPlayer.stop();
+                currentVideoEngine.stop();
             } catch (Exception ignored) {
             }
 
             try {
-                currentMediaPlayer.dispose();
+                currentVideoEngine.dispose();
             } catch (Exception ignored) {
             }
 
-            currentMediaPlayer = null;
+            currentVideoEngine = null;
         }
     }
 
-    private MediaPlayer createMediaPlayer(VideoFile videoFile) {
-        MediaPlayer player = videoPlayerService.loadAndPlayVideo(videoFile);
-        player.pause();
-        return player;
-    }
-
-    private void preloadNextVideo() {
-        if (videoFiles.isEmpty()) {
-            return;
-        }
-
-        int nextIndex = currentIndex + 1;
-
-        if (nextIndex >= videoFiles.size()) {
-            nextIndex = 0;
-        }
-
-        // already preloaded
-        if (preloadedMediaPlayer != null && preloadedIndex == nextIndex) {
-            return;
-        }
-
-        disposePreloadedPlayer();
-
-        try {
-            preloadedMediaPlayer = createMediaPlayer(videoFiles.get(nextIndex));
-            preloadedIndex = nextIndex;
-
-            System.out.println("Preloaded: " + videoFiles.get(nextIndex).getFilename());
-
-        } catch (Exception e) {
-
-            System.err.println("Preloading error: " + e.getMessage());
-            preloadedMediaPlayer = null;
-            preloadedIndex = -1;
-        }
-    }
-
-    private void disposePreloadedPlayer() {
-        if (preloadedMediaPlayer != null) {
-            try {
-                preloadedMediaPlayer.stop();
-            } catch (Exception ignored) {}
-
-            try {
-                preloadedMediaPlayer.dispose();
-            } catch (Exception ignored) {}
-
-            preloadedMediaPlayer = null;
-            preloadedIndex = -1;
-        }
-    }
-
-    private void preloadVideoMetadata(List<VideoFile> videos) {
-        for (VideoFile video : videos) {
-            try {
-                Media media = new Media(new File(video.getFilePath()).toURI().toString());
-                MediaPlayer player = new MediaPlayer(media);
-                player.setOnReady(() -> {
-                    System.out.println("Preloaded: " + video.getFilename() + " duration=" + player.getTotalDuration());
-                    player.dispose();
-                });
-                player.setOnError(() -> {
-                    System.err.println("Video error: " + video.getFilename());
-                    player.dispose();
-                });
-            } catch (Exception e) {
-                System.err.println("Impossible to load: " + video.getFilename());
-            }
-        }
-    }
-
-    private void showLoadingWindow() {
-        Stage loadingStage = new Stage();
-
-        Label label = new Label("Chargement des vidéos...");
-        ProgressIndicator indicator = new ProgressIndicator();
-
-        VBox box = new VBox(20, indicator, label);
-        box.setAlignment(Pos.CENTER);
-        box.setStyle("-fx-background-color:black;-fx-padding:40;");
-
-        Scene scene = new Scene(box, 300, 200);
-
-        loadingStage.setScene(scene);
-        loadingStage.setTitle("Chargement");
-        loadingStage.show();
-
-        Task<Void> task = new Task<>() {
-            @Override
-            protected Void call() {
-                preloadVideoMetadata(videoFiles);
-                return null;
-            }
-        };
-
-        task.setOnSucceeded(e -> loadingStage.close());
-
-        new Thread(task).start();
-    }
 }
