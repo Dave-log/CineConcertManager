@@ -274,10 +274,10 @@ public class StageManager {
                 currentMediaPlayer = preloadedMediaPlayer;
                 preloadedMediaPlayer = null;
                 preloadedIndex = -1;
-                System.out.println("Lecture depuis préchargement");
+                System.out.println("Reading from preloading");
             } else {
                 currentMediaPlayer = videoPlayerService.loadAndPlayVideo(videoFiles.get(index));
-                System.out.println("Lecture normale");
+                System.out.println("Normal reading");
             }
 
             mediaView.setMediaPlayer(currentMediaPlayer);
@@ -338,13 +338,13 @@ public class StageManager {
         mediaPlayer.setOnEndOfMedia(this::showPromoWithFade);
 
         mediaPlayer.setOnError(() -> {
-            System.err.println("Erreur MediaPlayer : " + mediaPlayer.getError());
+            System.err.println("MediaPlayer error: " + mediaPlayer.getError());
             showPromoWithFade();
         });
 
         if (mediaPlayer.getMedia() != null) {
             mediaPlayer.getMedia().setOnError(() -> {
-                System.err.println("Erreur Media : " + mediaPlayer.getMedia().getError());
+                System.err.println("Media error: " + mediaPlayer.getMedia().getError());
                 showPromoWithFade();
             });
         }
@@ -394,11 +394,11 @@ public class StageManager {
             preloadedMediaPlayer = createMediaPlayer(videoFiles.get(nextIndex));
             preloadedIndex = nextIndex;
 
-            System.out.println("Préchargée : " + videoFiles.get(nextIndex).getFilename());
+            System.out.println("Preloaded: " + videoFiles.get(nextIndex).getFilename());
 
         } catch (Exception e) {
 
-            System.err.println("Erreur préchargement : " + e.getMessage());
+            System.err.println("Preloading error: " + e.getMessage());
             preloadedMediaPlayer = null;
             preloadedIndex = -1;
         }
@@ -425,15 +425,15 @@ public class StageManager {
                 Media media = new Media(new File(video.getFilePath()).toURI().toString());
                 MediaPlayer player = new MediaPlayer(media);
                 player.setOnReady(() -> {
-                    System.out.println("Préchargée : " + video.getFilename() + " durée=" + player.getTotalDuration());
+                    System.out.println("Preloaded: " + video.getFilename() + " duration=" + player.getTotalDuration());
                     player.dispose();
                 });
                 player.setOnError(() -> {
-                    System.err.println("Erreur vidéo : " + video.getFilename());
+                    System.err.println("Video error: " + video.getFilename());
                     player.dispose();
                 });
             } catch (Exception e) {
-                System.err.println("Impossible de charger : " + video.getFilename());
+                System.err.println("Impossible to load: " + video.getFilename());
             }
         }
     }
