@@ -2,7 +2,7 @@
 setlocal
 
 :: === Configuration ===
-set "APP_NAME=CineConcertCreator"
+set "APP_NAME=CineConcertManager"
 set "APP_VERSION=1.0.0"
 set "MAIN_JAR=target\CineConcertManager-1.0.0.jar"
 set "MAIN_CLASS=org.davelogapps.cineconcertmanager.App"
