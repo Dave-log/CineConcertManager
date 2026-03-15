@@ -37,6 +37,18 @@
     </dependency>
 
     <dependency>
+      <groupId>uk.co.caprica</groupId>
+      <artifactId>vlcj</artifactId>
+      <version>4.12.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>uk.co.caprica</groupId>
+      <artifactId>vlcj-javafx</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <version>${junit.version}</version>

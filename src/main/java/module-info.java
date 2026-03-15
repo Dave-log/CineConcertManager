@@ -8,6 +8,8 @@ module org.davelogapps.cineconcertmanager {
     requires org.controlsfx.controls;
     requires java.prefs;
     requires static lombok;
+    requires uk.co.caprica.vlcj;
+    requires uk.co.caprica.vlcj.javafx;
 
     exports org.davelogapps.cineconcertmanager;
     exports org.davelogapps.cineconcertmanager.data;
