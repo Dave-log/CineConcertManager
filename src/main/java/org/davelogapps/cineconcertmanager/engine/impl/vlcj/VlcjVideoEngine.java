@@ -37,7 +37,7 @@ public class VlcjVideoEngine implements VideoEngine {
         this.imageView.setPreserveRatio(true);
         this.imageView.setSmooth(true);
 
-        this.mediaPlayerFactory = new MediaPlayerFactory();
+        this.mediaPlayerFactory = new MediaPlayerFactory("--avcodec-hw=none", "--no-video-title-show");
         this.mediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
 
         this.mediaPlayer.videoSurface().set(new ImageViewVideoSurface(this.imageView));
