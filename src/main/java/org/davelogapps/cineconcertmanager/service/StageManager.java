@@ -4,6 +4,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -119,9 +120,13 @@ public class StageManager {
         autoHide.setOnFinished(e -> {
             fadeOut.play();
             fadeOut.setOnFinished(ev -> controlBar.setVisible(false));
+
+            scene.setCursor(Cursor.NONE);
         });
 
         scene.setOnMouseMoved(event -> {
+            scene.setCursor(Cursor.DEFAULT);
+
             if (!controlBar.isVisible()) {
                 controlBar.setVisible(true);
                 fadeIn.playFromStart();
