@@ -40,7 +40,7 @@ copy "%MAIN_JAR%" "%APP_DIR%" > nul
 :: === Packaging ===
 echo Executable generation with JPackage...
 "%JAVA_HOME%\bin\jpackage.exe" ^
-  --type app-image ^
+  --type exe ^
   --name "%APP_NAME%" ^
   --app-version "%APP_VERSION%" ^
   --input "%APP_DIR%" ^
@@ -50,7 +50,8 @@ echo Executable generation with JPackage...
   --add-modules javafx.controls,javafx.fxml,javafx.media,javafx.graphics,java.logging ^
   --icon "%ICON_PATH%" ^
   --dest "%OUTPUT_DIR%" ^
-  --win-console ^
+  --win-shortcut ^
+  --win-menu ^
   --verbose
 
 echo Finished! Launch .exe from %OUTPUT_DIR%\%APP_NAME%\bin
